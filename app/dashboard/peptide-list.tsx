@@ -21,7 +21,7 @@ export default function PeptideList({ peptides, onDelete }: PeptideListProps) {
   if (peptides.length === 0) {
     return (
       <div className="mt-8 p-6 bg-background rounded-lg text-center text-gray-400">
-        <p>No peptides added yet. Click "➕ Add New Peptide" to get started!</p>
+        <p>No peptides added yet. Click ➕ Add New Peptide to get started!</p>
       </div>
     );
   }

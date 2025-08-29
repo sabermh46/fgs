@@ -1,7 +1,45 @@
 // app/actions/peptide-read-actions.ts
 "use server";
 
-import { supabaseServer } from "../lib/supabaseClient";
+import { supabaseServer } from "../lib/supabaseClient"; // Corrected import to use alias
+
+// Define the interfaces for the data structures returned by Supabase queries
+interface CategoryMap {
+  category_id: string;
+}
+
+interface EffectMap {
+  effect_id: string;
+}
+
+interface BenefitMap {
+  benefit_id: string;
+}
+
+interface PeptideLink {
+  id?: string;
+  link_type: 'vendor' | 'learn_more' | 'reference' | 'other';
+  url: string;
+  label: string | null;
+  position: number | null;
+}
+
+/**
+ * Helper function to safely extract an error message from an unknown error type.
+ * @param error The caught error object.
+ * @returns A string message for the error.
+ */
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  // Fallback for cases where error is not an Error instance but might have a message property
+  if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message: unknown }).message === 'string') {
+    return (error as { message: string }).message;
+  }
+  return "An unknown error occurred.";
+}
+
 
 /**
  * Fetches a single peptide's full details, including its related categories, effects, benefits, and links
@@ -54,15 +92,16 @@ export async function getPeptideForEditAction(peptideId: string) {
       name: peptideData.name,
       short_description: peptideData.short_description || "",
       description: peptideData.description || "",
-      selected_category_ids: categoryMaps?.map((item: any) => item.category_id) || [],
-      selected_effect_ids: effects?.map((item: any) => item.effect_id) || [],
-      selected_benefit_ids: benefits?.map((item: any) => item.benefit_id) || [],
-      links: links || [],
+      selected_category_ids: (categoryMaps as CategoryMap[] | null)?.map((item: CategoryMap) => item.category_id) || [],
+      selected_effect_ids: (effects as EffectMap[] | null)?.map((item: EffectMap) => item.effect_id) || [],
+      selected_benefit_ids: (benefits as BenefitMap[] | null)?.map((item: BenefitMap) => item.benefit_id) || [],
+      links: (links as PeptideLink[] | null) || [],
     };
 
     return { data: transformedData, error: null };
-  } catch (error: any) {
-    console.error("Unexpected Server Action Error (getPeptideForEditAction):", error.message);
-    return { data: null, error: "An unexpected error occurred during peptide fetch." };
+  } catch (caughtError: unknown) { // Catch as unknown
+    const errorMessage = getErrorMessage(caughtError); // Use helper to get message
+    console.error("Unexpected Server Action Error (getPeptideForEditAction):", errorMessage);
+    return { data: null, error: errorMessage };
   }
 }

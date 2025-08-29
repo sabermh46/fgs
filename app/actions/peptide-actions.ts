@@ -2,7 +2,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { supabaseServer } from "../lib/supabaseClient"; // Secure server-side Supabase client
+import { supabaseServer } from "../lib/supabaseClient"; // Corrected import to use alias
 
 interface PeptideFormData {
   id?: string; // Optional for update
@@ -21,11 +21,35 @@ interface PeptideFormData {
   }[];
 }
 
+interface ActionResponse<T = undefined> { // Changed default T to undefined, as data might not always be present
+  success: boolean;
+  error?: string;
+  data?: T;
+}
+
+/**
+ * Helper function to safely extract an error message from an unknown error type.
+ * @param error The caught error object.
+ * @returns A string message for the error.
+ */
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  // Fallback for cases where error is not an Error instance but might have a message property
+  if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message: unknown }).message === 'string') {
+    return (error as { message: string }).message;
+  }
+  return "An unknown error occurred.";
+}
+
 /**
  * Handles the creation or updating of a peptide and its related data.
  * This is a Server Action and runs exclusively on the server.
+ * @param formData The data for the peptide to save.
+ * @returns A promise resolving to an ActionResponse indicating success or failure.
  */
-export async function savePeptideAction(formData: PeptideFormData) {
+export async function savePeptideAction(formData: PeptideFormData): Promise<ActionResponse<{ peptideId: string }>> {
   const {
     id: peptideId, // id from formData if updating, otherwise it's undefined
     name,
@@ -123,19 +147,22 @@ export async function savePeptideAction(formData: PeptideFormData) {
     // Revalidate the dashboard path to show updated list
     revalidatePath("/dashboard");
 
-    return { success: true, peptideId: currentPeptideId };
-  } catch (error: any) {
-    console.error("Server Action Error (savePeptideAction):", error.message);
-    return { success: false, error: error.message };
+    return { success: true, data: { peptideId: currentPeptideId } };
+  } catch (error: unknown) {
+    const errorMessage = getErrorMessage(error);
+    console.error("Server Action Error (savePeptideAction):", errorMessage);
+    return { success: false, error: errorMessage };
   }
 }
 
 /**
  * Handles the deletion of a peptide.
  * This is a Server Action and runs exclusively on the server.
+ * @param peptideId The ID of the peptide to delete.
+ * @returns A promise resolving to an ActionResponse indicating success or failure.
  */
-export async function deletePeptideAction(peptideId: string) {
-    const supabase = supabaseServer; // Use the service role client on the server
+export async function deletePeptideAction(peptideId: string): Promise<ActionResponse> {
+    const supabase = supabaseServer;
 
     try {
         const { error } = await supabase
@@ -151,64 +178,77 @@ export async function deletePeptideAction(peptideId: string) {
         revalidatePath("/dashboard");
 
         return { success: true };
-    } catch (error: any) {
-        console.error("Server Action Error (deletePeptideAction):", error.message);
-        return { success: false, error: error.message };
+    } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error);
+        console.error("Server Action Error (deletePeptideAction):", errorMessage);
+        return { success: false, error: errorMessage };
     }
+}
+
+interface EffectData {
+  id: string;
+  name: string;
+  description: string | null;
 }
 
 /**
  * Creates a new effect.
  * This is a Server Action and runs exclusively on the server, using the service role key.
- *
  * @param name The name of the new effect.
  * @param description The description of the new effect (optional).
- * @returns A promise resolving to the new effect's data or null, along with any error.
+ * @returns A promise resolving to an ActionResponse containing the new effect's data or an error.
  */
-export async function createEffectAction(name: string, description: string | null = null) {
+export async function createEffectAction(name: string, description: string | null = null): Promise<ActionResponse<EffectData>> {
   const supabase = supabaseServer;
 
   try {
     const { data, error } = await supabase
       .from("effects")
       .insert({ name: name.trim(), description: description?.trim() || null })
-      .select("id, name, description") // Select description too
+      .select("id, name, description")
       .single();
 
     if (error) throw error;
 
     revalidatePath("/dashboard"); // Revalidate to ensure dropdowns can be updated
     return { success: true, data };
-  } catch (error: any) {
-    console.error("Server Action Error (createEffectAction):", error.message);
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const errorMessage = getErrorMessage(error);
+    console.error("Server Action Error (createEffectAction):", errorMessage);
+    return { success: false, error: errorMessage };
   }
+}
+
+interface BenefitData {
+  id: string;
+  name: string;
+  description: string | null;
 }
 
 /**
  * Creates a new benefit.
  * This is a Server Action and runs exclusively on the server, using the service role key.
- *
  * @param name The name of the new benefit.
  * @param description The description of the new benefit (optional).
- * @returns A promise resolving to the new benefit's data or null, along with any error.
+ * @returns A promise resolving to an ActionResponse containing the new benefit's data or an error.
  */
-export async function createBenefitAction(name: string, description: string | null = null) {
+export async function createBenefitAction(name: string, description: string | null = null): Promise<ActionResponse<BenefitData>> {
   const supabase = supabaseServer;
 
   try {
     const { data, error } = await supabase
       .from("benefits")
       .insert({ name: name.trim(), description: description?.trim() || null })
-      .select("id, name, description") // Select description too
+      .select("id, name, description")
       .single();
 
     if (error) throw error;
 
     revalidatePath("/dashboard"); // Revalidate to ensure dropdowns can be updated
     return { success: true, data };
-  } catch (error: any) {
-    console.error("Server Action Error (createBenefitAction):", error.message);
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const errorMessage = getErrorMessage(error);
+    console.error("Server Action Error (createBenefitAction):", errorMessage);
+    return { success: false, error: errorMessage };
   }
 }

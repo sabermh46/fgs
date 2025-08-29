@@ -17,10 +17,30 @@ interface Peptide {
   created_at: string;
 }
 
+interface User {
+  clerk_user_id: string; email: string; role: string;
+}
+
 interface DashboardClientProps {
-  users: any[];
+  users: User[];
   peptides: Peptide[];
 }
+
+/**
+ * Helper function to safely extract an error message from an unknown error type.
+ * @param error The caught error object.
+ * @returns A string message for the error.
+ */
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message: unknown }).message === 'string') {
+    return (error as { message: string }).message;
+  }
+  return "An unknown error occurred.";
+}
+
 
 export default function DashboardClient({ users, peptides }: DashboardClientProps) {
   const searchParams = useSearchParams();
@@ -40,9 +60,10 @@ export default function DashboardClient({ users, peptides }: DashboardClientProp
         } else {
           throw new Error(result.error || "Unknown error during deletion.");
         }
-      } catch (error: any) {
-        console.error("Error deleting peptide:", error.message);
-        alert(`Failed to delete peptide: ${error.message}`);
+      } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error);
+        console.error("Error deleting peptide:", errorMessage);
+        alert(`Failed to delete peptide: ${errorMessage}`);
       }
     }
   };

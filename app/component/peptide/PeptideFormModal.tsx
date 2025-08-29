@@ -16,6 +16,7 @@ interface Category {
   name: string;
 }
 
+type ActiveTab = "general" | "details" | "properties" | "links";
 interface Effect {
   id: string;
   name: string;
@@ -59,10 +60,23 @@ interface PeptideFormModalProps {
   peptideId?: string;
 }
 
+/**
+ * Helper function to safely extract an error message from an unknown error type.
+ * @param error The caught error object.
+ * @returns A string message for the error.
+ */
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message: unknown }).message === 'string') {
+    return (error as { message: string }).message;
+  }
+  return "An unknown error occurred.";
+}
+
 export default function PeptideFormModal({ onClose, peptideId }: PeptideFormModalProps) {
-  const [activeTab, setActiveTab] = useState<
-    "general" | "details" | "properties" | "links"
-  >("general");
+  const [activeTab, setActiveTab] = useState<ActiveTab>("general");
   const [formData, setFormData] = useState<PeptideFormData>({
     name: "",
     short_description: "",
@@ -108,8 +122,9 @@ export default function PeptideFormModal({ onClose, peptideId }: PeptideFormModa
       setAllCategories(categoriesData || []);
       setAllEffects(effectsData || []);
       setAllBenefits(benefitsData || []);
-    } catch (error: any) {
-      console.error("Error fetching options:", error.message);
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(error);
+      console.error("Error fetching options:", errorMessage);
       setFormError("Failed to load form options.");
     } finally {
       setLoadingInitialOptions(false);
@@ -155,14 +170,15 @@ export default function PeptideFormModal({ onClose, peptideId }: PeptideFormModa
         });
 
         setCharCount({
-            name: peptideData.name.length,
-            short_description: (peptideData.short_description || "").length,
-            description: (peptideData.description || "").length,
+          name: peptideData.name.length,
+          short_description: (peptideData.short_description || "").length,
+          description: (peptideData.description || "").length,
         });
 
-      } catch (error: any) {
-        console.error("Error fetching peptide for edit:", error.message);
-        setFormError("Failed to load peptide data for editing: " + error.message);
+      } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error);
+        console.error("Error fetching peptide for edit:", errorMessage);
+        setFormError("Failed to load peptide data for editing: " + errorMessage);
       } finally {
         setLoadingPeptideData(false);
       }
@@ -171,7 +187,7 @@ export default function PeptideFormModal({ onClose, peptideId }: PeptideFormModa
     fetchPeptideForEdit();
   }, [peptideId, loadingInitialOptions]);
 
-  const handleChange = useCallback((field: string, value: any, maxLength?: number) => {
+  const handleChange = useCallback((field: string, value: string, maxLength?: number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (maxLength && typeof value === 'string') {
       setCharCount((prev) => ({ ...prev, [field]: value.length }));
@@ -196,7 +212,7 @@ export default function PeptideFormModal({ onClose, peptideId }: PeptideFormModa
   const handleLinkChange = useCallback((
     index: number,
     field: keyof PeptideLink,
-    value: any
+    value: string | number | null
   ) => {
     setFormData((prev) => {
       const newLinks = [...prev.links];
@@ -234,9 +250,7 @@ export default function PeptideFormModal({ onClose, peptideId }: PeptideFormModa
     try {
       const result = await createEffectAction(newEffectName, newEffectDescription);
       if (result.success && result.data) {
-        // Optimistically update the local state with the new effect
         setAllEffects((prev) => [...prev, result.data!]);
-        // Automatically select the new effect
         setFormData((prev) => ({
             ...prev,
             selected_effect_ids: [...prev.selected_effect_ids, result.data!.id]
@@ -246,9 +260,10 @@ export default function PeptideFormModal({ onClose, peptideId }: PeptideFormModa
       } else {
         throw new Error(result.error || "Failed to add new effect.");
       }
-    } catch (error: any) {
-      console.error("Error adding effect:", error.message);
-      setFormError(`Failed to add new effect: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(error);
+      console.error("Error adding effect:", errorMessage);
+      setFormError(`Failed to add new effect: ${errorMessage}`);
     } finally {
       setIsAddingEffect(false);
     }
@@ -265,9 +280,7 @@ export default function PeptideFormModal({ onClose, peptideId }: PeptideFormModa
     try {
       const result = await createBenefitAction(newBenefitName, newBenefitDescription);
       if (result.success && result.data) {
-        // Optimistically update the local state with the new benefit
         setAllBenefits((prev) => [...prev, result.data!]);
-        // Automatically select the new benefit
         setFormData((prev) => ({
             ...prev,
             selected_benefit_ids: [...prev.selected_benefit_ids, result.data!.id]
@@ -277,9 +290,10 @@ export default function PeptideFormModal({ onClose, peptideId }: PeptideFormModa
       } else {
         throw new Error(result.error || "Failed to add new benefit.");
       }
-    } catch (error: any) {
-      console.error("Error adding benefit:", error.message);
-      setFormError(`Failed to add new benefit: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(error);
+      console.error("Error adding benefit:", errorMessage);
+      setFormError(`Failed to add new benefit: ${errorMessage}`);
     } finally {
       setIsAddingBenefit(false);
     }
@@ -329,20 +343,20 @@ export default function PeptideFormModal({ onClose, peptideId }: PeptideFormModa
         </div>
 
         <div className="flex border-b border-gray-700 bg-gray-800 text-white">
-          {["general", "details", "properties", "links"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab as any)}
-              className={`px-6 py-3 text-sm font-medium ${
-                activeTab === tab
-                  ? "border-b-2 border-blue-500 text-blue-400"
-                  : "text-gray-400 hover:text-gray-200"
-              } transition-colors duration-200`}
-            >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </button>
-          ))}
-        </div>
+        {["general", "details", "properties", "links"].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab as ActiveTab)}
+            className={`px-6 py-3 text-sm font-medium ${
+              activeTab === tab
+                ? "border-b-2 border-blue-500 text-blue-400"
+                : "text-gray-400 hover:text-gray-200"
+            } transition-colors duration-200`}
+          >
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </button>
+        ))}
+      </div>
 
         <form onSubmit={handleSubmit} className="flex-grow p-6 space-y-6 overflow-y-auto custom-scrollbar">
           {formError && (

@@ -38,7 +38,7 @@ export default function Header() {
   return (
     <header className="bg-surface border-b border-border">
       <div className="max-w-[1200px] flex justify-between items-center p-4 mx-auto">
-        <h1 className="text-lg font-semibold text-text text-xl">pepti.wiki</h1>
+        <h1 className="text-lg font-semibold text-text text-xl">Peptide Calculator</h1>
         <nav className="flex gap-4 items-center text-subtext">
           <SignedOut>
             <SignInButton>

@@ -59,51 +59,51 @@ export default function ManageUsersModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center backdrop-blur-sm justify-center p-6 z-50">
-      <div className="bg-white rounded-2xl w-full max-w-3xl shadow-lg overflow-hidden">
+      <div className="bg-background rounded-2xl w-full max-w-3xl shadow-lg overflow-hidden">
         {/* Header */}
-        <div className="flex justify-between items-center border-b border-gray-200 p-4 bg-gray-50">
-          <h2 className="text-xl font-semibold text-gray-800">Manage Users</h2>
+        <div className="flex justify-between items-center border-b border-gray-200 p-4 bg-accent">
+          <h2 className="text-xl font-semibold text-white">Manage Users</h2>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded-full text-gray-600"
+            className="p-1 hover:bg-gray-100 rounded-full text-white border-white border hover:text-gray-800 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Body - User Table */}
-        <div className="p-6 max-h-[60vh] overflow-y-auto bg-white">
+        <div className="p-6 max-h-[60vh] overflow-y-auto bg-background">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-background">
               <tr>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-6 py-3 text-left text-xs font-medium text-text uppercase tracking-wider"
                 >
                   Email
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-6 py-3 text-left text-xs font-medium text-text uppercase tracking-wider"
                 >
                   Role
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-6 py-3 text-right text-xs font-medium text-text uppercase tracking-wider"
                 >
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-background divide-y divide-gray-200">
               {localUsers.length > 0 ? (
                 localUsers.map((user) => (
                   <tr key={user.clerk_user_id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text">
                       {user.email}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text">
                       <span
                         className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           user.role === "admin"
@@ -135,7 +135,7 @@ export default function ManageUsersModal({
                 ))
               ) : (
                 <tr>
-                  <td colSpan={3} className="px-6 py-4 text-center text-sm text-gray-500">
+                  <td colSpan={3} className="px-6 py-4 text-center text-sm text-text">
                     No users found.
                   </td>
                 </tr>
@@ -145,7 +145,7 @@ export default function ManageUsersModal({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end p-4 border-t border-gray-200 bg-gray-50">
+        <div className="flex justify-end p-4 border-t border-gray-200 bg-background">
           <button
             type="button"
             onClick={onClose}

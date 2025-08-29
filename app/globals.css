@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --surface: #f3f4f6;
+  --background: #ffffff;
+  --border: #e5e7eb;
+  --text: #1f2937;
+  --sub-text: #6b7280;
+  --accent: #3b82f6;
+  --accent-hover: #1d4ed8;
+  --input-background: #e9ecef;
+  --input-border: #ced4da;
+}
+
+.dark {
+  --surface: #1e2637;
+  --background: #141a27;
+  --border: #334155;
+  --text: #e2e8f0;
+  --sub-text: #94a3b8;
+  --accent: #3b82f6;
+  --accent-hover: #60a5fa;
+  --input-background: #2d3748;
+  --input-border: #4a5568;
+}
+
+
+
+/* Hook them into Tailwind via @theme */
+@theme inline {
+  --color-surface: var(--surface);
+  --color-background: var(--background);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-subtext: var(--sub-text);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-input-background: var(--input-background);
+  --color-input-border: var(--input-border);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--text);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
